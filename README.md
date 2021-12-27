@@ -5,3 +5,4 @@
 ![alt](preview.png)
 ### 天气API
 https://www.sojson.com/blog/305.html# QtWeather
+# QtWeather
