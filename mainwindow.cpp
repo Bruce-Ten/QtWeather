@@ -82,6 +82,7 @@ MainWindow::MainWindow(QWidget *parent)
     labelUT->setAlignment(Qt::AlignCenter);
     hbox->addWidget(labelUT);
     searchEdit = new QLineEdit(city);
+    searchEdit->setAlignment(Qt::AlignCenter);
     hbox->addWidget(searchEdit);
     searchButton = new QPushButton("更换城市");
     hbox->addWidget(searchButton);
