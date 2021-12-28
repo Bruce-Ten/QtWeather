@@ -185,6 +185,24 @@ void MainWindow::getWeather()
             }
         }
 
+        //    */
+            //读取本地文件代替网络API，更快更可靠。
+            QFile file(":/cityID.txt");
+            bool ok = file.open(QIODevice::ReadOnly);
+            if (ok) {
+                QTextStream TS(&file);
+                QString s = TS.readAll();
+                file.close();
+                QStringList SL = s.split("\n");
+                for(int i=0; i<SL.length(); i++){
+                    QString line = SL.at(i);
+                    if (line.contains(city)) {
+                        cityID = line.left(line.indexOf("="));
+                        break;
+                    }
+                }
+            }
+
         //获取天气信息
         surl = "http://t.weather.itboy.net/api/weather/city/"+ cityID;
             url.setUrl(surl);
