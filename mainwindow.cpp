@@ -367,3 +367,37 @@ void MainWindow::showForecast()
     raise();
     activateWindow();
 }
+
+void MainWindow::set()
+{
+    QDialog *dialog = new QDialog;
+    dialog->setWindowTitle("设置");
+    dialog->setFixedSize(200, 100);
+    QVBoxLayout *vbox = new QVBoxLayout;
+    QHBoxLayout *hbox = new QHBoxLayout;
+    QLabel *label = new QLabel("城市");
+    hbox->addWidget(label);
+    QLineEdit *lineEdit = new QLineEdit(city);
+    hbox->addWidget(lineEdit);
+    vbox->addLayout(hbox);
+
+    hbox = new QHBoxLayout;
+    QPushButton *pushButton_confirm = new QPushButton("确定");
+    QPushButton *pushButton_cancel = new QPushButton("取消");
+    hbox->addStretch();
+    hbox->addWidget(pushButton_confirm);
+    hbox->addStretch();
+    vbox->addLayout(hbox);
+    dialog->setLayout(vbox);
+    dialog->show();
+    connect(pushButton_confirm, SIGNAL(clicked()), dialog, SLOT(accept()));
+    connect(pushButton_cancel, SIGNAL(clicked()), dialog, SLOT(reject()));
+    int dc = dialog->exec();
+    if (dc == QDialog::Accepted) {
+        settings.setValue("City", lineEdit->text());
+        dialog->close();
+        getWeather();
+    } else if (dc == QDialog::Rejected) {
+        dialog->close();
+    }
+}
