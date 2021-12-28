@@ -116,6 +116,48 @@ void MainWindow::closeEvent(QCloseEvent *event)//此函数在QWidget关闭时执
     event->ignore();
 }
 
+void MainWindow::getWeather()
+{
+    QDateTime currentDateTime = QDateTime::currentDateTime();
+    QString log = currentDateTime.toString("yyyy/MM/dd HH:mm:ss") + "\n";
+
+    QUrl url;
+    QString surl;
+    QNetworkAccessManager manager;
+    QNetworkReply *reply;
+    QEventLoop loop;
+    QByteArray BA;
+    QJsonDocument JD;
+    QJsonParseError JPE;
+
+    city = settings.value("City", "").toString();
+    if (city == "") {
+        surl = "http://ip-api.com/json/?lang=zh-CN";
+        url.setUrl(surl);
+        reply = manager.get(QNetworkRequest(url));
+        //请求结束并下载完成后，退出子事件循环
+        QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+        //开启子事件循环
+        loop.exec();
+        BA = reply->readAll();
+        qDebug() << surl ;
+        qDebug() << BA;
+        log += surl + "\n";
+        log += BA + "\n";
+        JD = QJsonDocument::fromJson(BA, &JPE);
+        if(JPE.error == QJsonParseError::NoError) {
+            if(JD.isObject()) {
+                QJsonObject obj = JD.object();
+                if(obj.contains("city")) {
+                    QJsonValue JV_city = obj.take("city");
+                    if(JV_city.isString()) {
+                        city = JV_city.toString();
+                    }
+                }
+            }
+        }
+    }
+}
 
 void MainWindow::trayActivated(QSystemTrayIcon::ActivationReason reason)
 {
