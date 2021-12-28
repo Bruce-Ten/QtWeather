@@ -158,6 +158,8 @@ void MainWindow::getWeather()
         }
     }
 
+    //城市名转ID
+    //    /*
         surl = "http://hao.weidunewtab.com/tianqi/city.php?city=" + city;
         url.setUrl(surl);
         reply = manager.get(QNetworkRequest(url));
@@ -182,6 +184,68 @@ void MainWindow::getWeather()
                 labelComment->setText(reply->readAll());
             }
         }
+
+        //获取天气信息
+        surl = "http://t.weather.itboy.net/api/weather/city/"+ cityID;
+            url.setUrl(surl);
+            reply = manager.get(QNetworkRequest(url));
+            QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+            loop.exec();
+            BA = reply->readAll();
+            qDebug() << surl;
+            //qDebug() << BA;
+            log += surl + "\n";
+            log += BA + "\n";
+            JD = QJsonDocument::fromJson(BA, &JPE);
+            //qDebug() << "QJsonParseError:" << JPE.errorString();
+            if (JPE.error == QJsonParseError::NoError) {
+                if (JD.isObject()) {
+                    QJsonObject obj = JD.object();
+                    city = obj.value("cityInfo").toObject().value("city").toString().replace("市","");
+                    labelCity->setText(city);
+                    QString SUT = obj.value("cityInfo").toObject().value("updateTime").toString();
+                    labelUT->setText("更新\n" + SUT);
+                    //if (obj.contains("data")) {
+                    QJsonObject JO_data = JD.object().value("data").toObject();
+                    QString wendu = JO_data.value("wendu").toString() + "°C";
+                    labelTemp->setText(wendu);
+                    QString shidu = JO_data.value("shidu").toString();
+                    labelSD->setText("湿度\n" + shidu);
+                    //labelWind->setText(JO_data.value("wendu").toString() + "\n" + JO_data.value("WS").toString());
+                    QString pm25 = QString::number(JO_data.value("pm25").toInt());
+                    labelPM->setText("PM2.5\n" + pm25);
+                    QString quality = JO_data.value("quality").toString();
+                    QString ganmao = JO_data.value("ganmao").toString();
+                    labelAQI->setText("空气质量 " + quality + "\n" + ganmao);
+
+                    //if(JO_data.contains("forecast")){
+                    QJsonArray JA_forecast = JO_data.value("forecast").toArray();
+                    for (int i=0; i<15; i++) {
+                        labelDate[i]->setText(JA_forecast[i].toObject().value("date").toString());
+                        labelDate[i]->setAlignment(Qt::AlignCenter);
+                        QString wtype = JA_forecast[i].toObject().value("type").toString();
+                        qDebug() << wtype;
+                        QString icon_path = ":/images/" + weatherMap[wtype] + ".png";
+                        if(i == 0){
+                            sw0 = JA_forecast[i].toObject().value("type").toString();
+                            icon_path0 = icon_path;
+                        }
+                        //qDebug() << icon_path;
+                        QPixmap pixmap(icon_path);
+                        labelWImg[i]->setToolTip(wtype);
+                        labelWImg[i]->setPixmap(pixmap.scaled(50,50));
+                        labelWImg[i]->setAlignment(Qt::AlignCenter);
+                        labelWeather[i]->setText(wtype + "\n" + JA_forecast[i].toObject().value("high").toString() + "\n" + JA_forecast[i].toObject().value("low").toString() + "\n" + JA_forecast[i].toObject().value("fx").toString() + JA_forecast[i].toObject().value("fl").toString());
+                        labelWeather[i]->setAlignment(Qt::AlignCenter);
+                    }
+                    //}
+                    //}
+                    swn = city + "\n" + sw0 + "\n" + wendu + "\n湿度：" + shidu + "\nPM2.5：" + pm25 + "\n空气质量：" + quality +"\n" + ganmao + "\n更新：" + SUT;
+                    //qDebug() << swn;
+                    systray->setToolTip(swn);
+                    systray->setIcon(QIcon(icon_path0));
+                }
+            }
 }
 
 void MainWindow::trayActivated(QSystemTrayIcon::ActivationReason reason)
