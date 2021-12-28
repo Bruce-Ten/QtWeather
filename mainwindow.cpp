@@ -157,6 +157,31 @@ void MainWindow::getWeather()
             }
         }
     }
+
+        surl = "http://hao.weidunewtab.com/tianqi/city.php?city=" + city;
+        url.setUrl(surl);
+        reply = manager.get(QNetworkRequest(url));
+        QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+        loop.exec();
+        cityID = reply->readAll();
+        qDebug() << surl;
+        qDebug() << cityID;
+        log += surl + "\n";
+        log += cityID + "\n";
+        if (cityID == "") {
+            labelComment->setText("错误：城市名返回城市ID为空");
+            return;
+        } else if(cityID == "ERROR") {
+            labelComment->setText(city + " ：城市名称错误");
+            return;
+        } else {
+            bool ok;
+            int dec = cityID.toInt(&ok, 10);
+            Q_UNUSED(dec);
+            if(!ok){
+                labelComment->setText(reply->readAll());
+            }
+        }
 }
 
 void MainWindow::trayActivated(QSystemTrayIcon::ActivationReason reason)
