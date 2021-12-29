@@ -18,7 +18,8 @@ public:
     QString city="", cityID="", swn="", sw0="", icon_path0="";
 
 private:
-    QLabel *labelTemp, *labelCity, *labelSD, *labelWind, *labelPM, *labelAQI, *labelUT, *labelDate[15], *labelWImg[15], *labelWeather[15], *labelComment;
+    QLabel *labelTemp, *labelCity, *labelSD, *labelWind, *labelPM, *labelAQI, *labelUT, *labelDate[15],
+    *labelWImg[15], *labelWeather[15], *labelComment;
     QLineEdit *searchEdit;
     QPushButton *searchButton;
     QSystemTrayIcon *systray;
@@ -35,7 +36,7 @@ private slots:
     void about();
     void changelog();
     void trayActivated(QSystemTrayIcon::ActivationReason reason);
-
+    void changeCity();
 };
 
 #endif // MAINWINDOW_H

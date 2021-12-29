@@ -79,7 +79,7 @@ MainWindow::MainWindow(QWidget *parent)
     searchButton = new QPushButton("更换城市");
     hbox->addWidget(searchButton);
     vbox->addLayout(hbox);
-
+    connect(searchButton, SIGNAL(clicked(bool)), this, SLOT(changeCity()));
     QWidget *widget1 = new QWidget;
     widget1->setFixedSize(1200,180);
     widget1->setAttribute(Qt::WA_TranslucentBackground, true);
@@ -116,8 +116,6 @@ MainWindow::MainWindow(QWidget *parent)
         action_forecast->setIcon(QIcon::fromTheme("audio-volume-high"));
         QAction *action_refresh = new QAction("刷新", traymenu);
         action_refresh->setIcon(QIcon::fromTheme("view-refresh"));
-        QAction *action_set = new QAction("设置", traymenu);
-        action_set->setIcon(QIcon::fromTheme("set"));
         QAction *action_log = new QAction("日志", traymenu);
         action_log->setIcon(QIcon::fromTheme("document-new"));
         QAction *action_about = new QAction("关于", traymenu);
@@ -138,7 +136,7 @@ MainWindow::MainWindow(QWidget *parent)
         connect(systray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayActivated(QSystemTrayIcon::ActivationReason)));
         connect(action_forecast, SIGNAL(triggered(bool)), this, SLOT(showForecast()));
         connect(action_refresh, SIGNAL(triggered(bool)), this, SLOT(getWeather()));
-        connect(action_set, SIGNAL(triggered(bool)), this, SLOT(set()));
+//        connect(action_set, SIGNAL(triggered(bool)), this, SLOT(set()));
         connect(action_log, &QAction::triggered, [=](){
               QDesktopServices::openUrl(QUrl(path));
         });
@@ -330,14 +328,14 @@ void MainWindow::trayActivated(QSystemTrayIcon::ActivationReason reason)
 
 void MainWindow::about()
 {
-    QMessageBox MB(QMessageBox::NoIcon, "关于", "中国天气预报 2.6\n一款基于Qt的天气预报程序。\n作者：海天鹰\nE-mail: sonichy@163.com\n主页：https://github.com/sonichy\n天气API：https://www.sojson.com/blog/305.html\n\n参考：\n获取网页源码写入文件: http://blog.csdn.net/small_qch/article/details/7200271\nJOSN解析: http://blog.sina.com.cn/s/blog_a6fb6cc90101gnxm.html");
+    QMessageBox MB(QMessageBox::NoIcon, "关于", "中国天气预报 2.6\n一款基于Qt的天气预报程序。\n作者：牛童\nE-mail: 1248449622@qq.com\n天气API：https://www.sojson.com/blog/305.html\n\n");
     MB.setIconPixmap(QPixmap(":/icon.png"));
     MB.exec();
 }
 
 void MainWindow::changelog()
 {
-    QString s = "2.6 (2020-04-18)\n天气预报增加到15天。\n滚动布局。\n增加设置城市。\n图标加入资源，方便单文件运行。\n城市名转ID，读取本地文件代替网络API，更快更可靠。\n\n2.5 (2018-10-15)\n1.更换失效的天气预报API，优化结构，解决窗口顶置问题。\n\n2.4 (2018-05-30)\n1.增加写log文件，不需要调试也可以查看API的问题了。\n\n2.3 (2018-04-13)\n1.修复：日期数据不含月转换为日期引起的日期错误。\n\n2.2 (2017-01-23)\n1.使用本地图标代替边缘有白色的网络图标，可用于暗色背景了！\n\n2.1 (2016-12-09)\n1.窗体始终居中。\n\n2.0 (2016-11-21)\n1.使用QScript库代替QJsonDocument解析JSON，开发出兼容Qt4的版本。\n2.单击图标弹出实时天气消息，弥补某些系统不支持鼠标悬浮信息的不足。\n3.由于QScriptValueIterator.value().property解析不了某个JSON，使用QScriptValue.property.property代替。\n4.托盘右键增加一个刷新菜单。\n\n1.0 (2016-11-17)\n1.动态修改天气栏托盘图标，鼠标悬浮显示实时天气，点击菜单弹出窗口显示7天天气预报。\n2.每30分钟自动刷新一次。\n3.窗体透明。";
+    QString s = "2.6 (2020-04-18)\n天气预报增加到15天。\n滚动布局。\n增加更换城市功能。\n图标加入资源，方便单文件运行。\n城市名转ID，读取本地文件代替网络API，更快更可靠。\n\n2.5 (2018-10-15)\n1.更换失效的天气预报API，优化结构，解决窗口顶置问题。\n\n2.4 (2018-05-30)\n1.增加写log文件，不需要调试也可以查看API的问题了。\n\n2.3 (2018-04-13)\n1.修复：日期数据不含月转换为日期引起的日期错误。\n\n2.2 (2017-01-23)\n1.使用本地图标代替边缘有白色的网络图标，可用于暗色背景了！\n\n2.1 (2016-12-09)\n1.窗体始终居中。\n\n2.0 (2016-11-21)\n1.使用QScript库代替QJsonDocument解析JSON，开发出兼容Qt4的版本。\n2.单击图标弹出实时天气消息，弥补某些系统不支持鼠标悬浮信息的不足。\n3.由于QScriptValueIterator.value().property解析不了某个JSON，使用QScriptValue.property.property代替。\n4.托盘右键增加一个刷新菜单。\n\n1.0 (2016-11-17)\n1.动态修改天气栏托盘图标，鼠标悬浮显示实时天气，点击菜单弹出窗口显示7天天气预报。\n2.每30分钟自动刷新一次。\n3.窗体透明。";
     QDialog *dialog = new QDialog;
     dialog->setWindowTitle("更新历史");
     dialog->setFixedSize(400, 300);
@@ -400,4 +398,10 @@ void MainWindow::set()
     } else if (dc == QDialog::Rejected) {
         dialog->close();
     }
+}
+
+void MainWindow::changeCity()
+{
+    settings.setValue("City", searchEdit->text());
+    getWeather();
 }
