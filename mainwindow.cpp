@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
                   "QScrollArea { border:none; }"
                   "QScrollBar:horizontal { background:transparent; }");
     setWindowTitle("中国天气预报");
-    setFixedSize(700,300);
+//    setFixedSize(700,300);
     move((QApplication::desktop()->width() - QApplication::desktop()->width())/2, (QApplication::desktop()->height() - QApplication::desktop()->height())/2);
     QWidget *widget = new QWidget;
     setAttribute(Qt::WA_TranslucentBackground, true);
@@ -126,7 +126,7 @@ MainWindow::MainWindow(QWidget *parent)
         action_quit->setIcon(QIcon::fromTheme("application-exit"));
         traymenu->addAction(action_forecast);
         traymenu->addAction(action_refresh);
-        traymenu->addAction(action_set);
+//        traymenu->addAction(action_set);
         traymenu->addAction(action_log);
         traymenu->addAction(action_about);
         traymenu->addAction(action_changelog);
@@ -364,40 +364,6 @@ void MainWindow::showForecast()
     show();
     raise();
     activateWindow();
-}
-
-void MainWindow::set()
-{
-    QDialog *dialog = new QDialog;
-    dialog->setWindowTitle("设置");
-    dialog->setFixedSize(200, 100);
-    QVBoxLayout *vbox = new QVBoxLayout;
-    QHBoxLayout *hbox = new QHBoxLayout;
-    QLabel *label = new QLabel("城市");
-    hbox->addWidget(label);
-    QLineEdit *lineEdit = new QLineEdit(city);
-    hbox->addWidget(lineEdit);
-    vbox->addLayout(hbox);
-
-    hbox = new QHBoxLayout;
-    QPushButton *pushButton_confirm = new QPushButton("确定");
-    QPushButton *pushButton_cancel = new QPushButton("取消");
-    hbox->addStretch();
-    hbox->addWidget(pushButton_confirm);
-    hbox->addStretch();
-    vbox->addLayout(hbox);
-    dialog->setLayout(vbox);
-    dialog->show();
-    connect(pushButton_confirm, SIGNAL(clicked()), dialog, SLOT(accept()));
-    connect(pushButton_cancel, SIGNAL(clicked()), dialog, SLOT(reject()));
-    int dc = dialog->exec();
-    if (dc == QDialog::Accepted) {
-        settings.setValue("City", lineEdit->text());
-        dialog->close();
-        getWeather();
-    } else if (dc == QDialog::Rejected) {
-        dialog->close();
-    }
 }
 
 void MainWindow::changeCity()
