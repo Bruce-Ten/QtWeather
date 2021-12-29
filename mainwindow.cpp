@@ -61,9 +61,6 @@ MainWindow::MainWindow(QWidget *parent)
     labelSD = new QLabel("湿度");
     labelSD->setAlignment(Qt::AlignCenter);
     hbox->addWidget(labelSD);
-    //labelWind = new QLabel("风向?\n风力?");
-    //labelWind->setAlignment(Qt::AlignCenter);
-    //hbox->addWidget(labelWind);
     labelPM = new QLabel("PM2.5");
     labelPM->setAlignment(Qt::AlignCenter);
     hbox->addWidget(labelPM);
@@ -80,6 +77,7 @@ MainWindow::MainWindow(QWidget *parent)
     hbox->addWidget(searchButton);
     vbox->addLayout(hbox);
     connect(searchButton, SIGNAL(clicked(bool)), this, SLOT(changeCity()));
+    searchButton->setShortcut(Qt::Key_Enter);
     QWidget *widget1 = new QWidget;
     widget1->setFixedSize(1200,180);
     widget1->setAttribute(Qt::WA_TranslucentBackground, true);
@@ -107,40 +105,39 @@ MainWindow::MainWindow(QWidget *parent)
     setCentralWidget(widget);
 
     //托盘菜单
-        systray = new QSystemTrayIcon(this);
-        systray->setToolTip("托盘天气");
-        systray->setIcon(QIcon(":/images/55.png"));
-        systray->setVisible(true);
-        QMenu *traymenu = new QMenu(this);
-        QAction *action_forecast = new QAction("预报", traymenu);
-        action_forecast->setIcon(QIcon::fromTheme("audio-volume-high"));
-        QAction *action_refresh = new QAction("刷新", traymenu);
-        action_refresh->setIcon(QIcon::fromTheme("view-refresh"));
-        QAction *action_about = new QAction("关于", traymenu);
-        action_about->setIcon(QIcon::fromTheme("help-about"));
-        QAction *action_changelog = new QAction("更新日志", traymenu);
-        action_changelog->setIcon(QIcon::fromTheme("document-new"));
-        QAction *action_quit = new QAction("退出", traymenu);
-        action_quit->setIcon(QIcon::fromTheme("application-exit"));
-        traymenu->addAction(action_forecast);
-        traymenu->addAction(action_refresh);
-        traymenu->addAction(action_about);
-        traymenu->addAction(action_changelog);
-        traymenu->addAction(action_quit);
-        systray->setContextMenu(traymenu);
-        systray->show();
-        connect(systray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayActivated(QSystemTrayIcon::ActivationReason)));
-        connect(action_forecast, SIGNAL(triggered(bool)), this, SLOT(showForecast()));
-        connect(action_refresh, SIGNAL(triggered(bool)), this, SLOT(getWeather()));
-        connect(action_about, SIGNAL(triggered(bool)), this, SLOT(about()));
-        connect(action_changelog, SIGNAL(triggered(bool)), this, SLOT(changelog()));
-        connect(action_quit, SIGNAL(triggered()), qApp, SLOT(quit()));
-
-        QTimer *timer = new QTimer();
-        timer->setInterval(1800000);
-        timer->start();
-        connect(timer, SIGNAL(timeout()), this, SLOT(getWeather()));
-        getWeather();
+    systray = new QSystemTrayIcon(this);
+    systray->setToolTip("托盘天气");
+    systray->setIcon(QIcon(":/images/55.png"));
+    systray->setVisible(true);
+    QMenu *traymenu = new QMenu(this);
+    QAction *action_forecast = new QAction("预报", traymenu);
+    action_forecast->setIcon(QIcon::fromTheme("audio-volume-high"));
+    QAction *action_refresh = new QAction("刷新", traymenu);
+    action_refresh->setIcon(QIcon::fromTheme("view-refresh"));
+    QAction *action_about = new QAction("关于", traymenu);
+    action_about->setIcon(QIcon::fromTheme("help-about"));
+    QAction *action_changelog = new QAction("更新日志", traymenu);
+    action_changelog->setIcon(QIcon::fromTheme("document-new"));
+    QAction *action_quit = new QAction("退出", traymenu);
+    action_quit->setIcon(QIcon::fromTheme("application-exit"));
+    traymenu->addAction(action_forecast);
+    traymenu->addAction(action_refresh);
+    traymenu->addAction(action_about);
+    traymenu->addAction(action_changelog);
+    traymenu->addAction(action_quit);
+    systray->setContextMenu(traymenu);
+    systray->show();
+    connect(systray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayActivated(QSystemTrayIcon::ActivationReason)));
+    connect(action_forecast, SIGNAL(triggered(bool)), this, SLOT(showForecast()));
+    connect(action_refresh, SIGNAL(triggered(bool)), this, SLOT(getWeather()));
+    connect(action_about, SIGNAL(triggered(bool)), this, SLOT(about()));
+    connect(action_changelog, SIGNAL(triggered(bool)), this, SLOT(changelog()));
+    connect(action_quit, SIGNAL(triggered()), qApp, SLOT(quit()));
+    QTimer *timer = new QTimer();
+    timer->setInterval(1800000);
+    timer->start();
+    connect(timer, SIGNAL(timeout()), this, SLOT(getWeather()));
+    getWeather();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)//此函数在QWidget关闭时执行
@@ -209,7 +206,7 @@ void MainWindow::getWeather()
             return;
         } else if(cityID == "ERROR") {
             labelComment->setText(city + " ：城市名称错误");
-            return;
+//            return;
         } else {
             bool ok;
             int dec = cityID.toInt(&ok, 10);
@@ -263,7 +260,7 @@ void MainWindow::getWeather()
                     labelTemp->setText(wendu);
                     QString shidu = JO_data.value("shidu").toString();
                     labelSD->setText("湿度\n" + shidu);
-                    //labelWind->setText(JO_data.value("wendu").toString() + "\n" + JO_data.value("WS").toString());
+//                    labelWind->setText(JO_data.value("wendu").toString() + "\n" + JO_data.value("WS").toString());
                     QString pm25 = QString::number(JO_data.value("pm25").toInt());
                     labelPM->setText("PM2.5\n" + pm25);
                     QString quality = JO_data.value("quality").toString();
