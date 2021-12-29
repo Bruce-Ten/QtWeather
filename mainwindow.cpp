@@ -116,8 +116,6 @@ MainWindow::MainWindow(QWidget *parent)
         action_forecast->setIcon(QIcon::fromTheme("audio-volume-high"));
         QAction *action_refresh = new QAction("刷新", traymenu);
         action_refresh->setIcon(QIcon::fromTheme("view-refresh"));
-        QAction *action_log = new QAction("日志", traymenu);
-        action_log->setIcon(QIcon::fromTheme("document-new"));
         QAction *action_about = new QAction("关于", traymenu);
         action_about->setIcon(QIcon::fromTheme("help-about"));
         QAction *action_changelog = new QAction("更新日志", traymenu);
@@ -126,8 +124,6 @@ MainWindow::MainWindow(QWidget *parent)
         action_quit->setIcon(QIcon::fromTheme("application-exit"));
         traymenu->addAction(action_forecast);
         traymenu->addAction(action_refresh);
-//        traymenu->addAction(action_set);
-        traymenu->addAction(action_log);
         traymenu->addAction(action_about);
         traymenu->addAction(action_changelog);
         traymenu->addAction(action_quit);
@@ -136,10 +132,6 @@ MainWindow::MainWindow(QWidget *parent)
         connect(systray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayActivated(QSystemTrayIcon::ActivationReason)));
         connect(action_forecast, SIGNAL(triggered(bool)), this, SLOT(showForecast()));
         connect(action_refresh, SIGNAL(triggered(bool)), this, SLOT(getWeather()));
-//        connect(action_set, SIGNAL(triggered(bool)), this, SLOT(set()));
-        connect(action_log, &QAction::triggered, [=](){
-              QDesktopServices::openUrl(QUrl(path));
-        });
         connect(action_about, SIGNAL(triggered(bool)), this, SLOT(about()));
         connect(action_changelog, SIGNAL(triggered(bool)), this, SLOT(changelog()));
         connect(action_quit, SIGNAL(triggered()), qApp, SLOT(quit()));
