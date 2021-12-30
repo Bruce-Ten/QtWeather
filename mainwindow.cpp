@@ -32,7 +32,10 @@ static const QMap<QString, QString> weatherMap {
     {"中雨", "8"},
     {"大雨", "9"},
     {"中到大雨", "9"},
-    {"雪", "13"},
+    {"小雪", "14"},
+    {"中雪", "15"},
+    {"大雪", "13"},
+    {"霾", "69"},
 };
 
 MainWindow::MainWindow(QWidget *parent)
