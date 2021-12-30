@@ -43,14 +43,12 @@ MainWindow::MainWindow(QWidget *parent)
     ,settings(QCoreApplication::organizationName(), QCoreApplication::applicationName())
 {
     setStyleSheet("QLabel { color:white; }"
-                  "QScrollArea { border:none; }"
+//                  "QScrollArea { border:none; }"
                   "QScrollBar:horizontal { background:transparent; }");
     setWindowTitle("中国天气预报");
-//    setFixedSize(700,300);
     move((QApplication::desktop()->width() - QApplication::desktop()->width())/2, (QApplication::desktop()->height() - QApplication::desktop()->height())/2);
     QWidget *widget = new QWidget;
     setAttribute(Qt::WA_TranslucentBackground, true);
-    widget->setAttribute(Qt::WA_TranslucentBackground, true);
 
     QVBoxLayout *vbox = new QVBoxLayout;
     QHBoxLayout *hbox = new QHBoxLayout;
@@ -67,10 +65,10 @@ MainWindow::MainWindow(QWidget *parent)
     labelPM = new QLabel("PM2.5");
     labelPM->setAlignment(Qt::AlignCenter);
     hbox->addWidget(labelPM);
-    labelAQI = new QLabel("空气质量");
+    labelAQI = new QLabel("空气质量：");
     labelAQI->setAlignment(Qt::AlignCenter);
     hbox->addWidget(labelAQI);
-    labelUT = new QLabel("更新");
+    labelUT = new QLabel("更新时间");
     labelUT->setAlignment(Qt::AlignCenter);
     hbox->addWidget(labelUT);
     searchEdit = new QLineEdit(city);
@@ -209,6 +207,7 @@ void MainWindow::getWeather()
             return;
         } else if(cityID == "ERROR") {
             labelComment->setText(city + " ：城市名称错误");
+            cityID = "101181801";
 //            return;
         } else {
             bool ok;
@@ -216,6 +215,8 @@ void MainWindow::getWeather()
             Q_UNUSED(dec);
             if(!ok){
                 labelComment->setText(reply->readAll());
+            } else {
+                labelComment->setText("");
             }
         }
 
@@ -256,7 +257,7 @@ void MainWindow::getWeather()
                     city = obj.value("cityInfo").toObject().value("city").toString().replace("市","");
                     labelCity->setText(city);
                     QString SUT = obj.value("cityInfo").toObject().value("updateTime").toString();
-                    labelUT->setText("更新\n" + SUT);
+                    labelUT->setText("更新时间：\n" + SUT);
                     //if (obj.contains("data")) {
                     QJsonObject JO_data = JD.object().value("data").toObject();
                     QString wendu = JO_data.value("wendu").toString() + "°C";
@@ -268,12 +269,11 @@ void MainWindow::getWeather()
                     labelPM->setText("PM2.5\n" + pm25);
                     QString quality = JO_data.value("quality").toString();
                     QString ganmao = JO_data.value("ganmao").toString();
-                    labelAQI->setText("空气质量 " + quality + "\n" + ganmao);
+                    labelAQI->setText("空气质量：" + quality + "\n" + ganmao);
 
-                    //if(JO_data.contains("forecast")){
                     QJsonArray JA_forecast = JO_data.value("forecast").toArray();
                     for (int i=0; i<15; i++) {
-                        labelDate[i]->setText(JA_forecast[i].toObject().value("date").toString());
+                        labelDate[i]->setText(JA_forecast[i].toObject().value("date").toString() + "日");
                         labelDate[i]->setAlignment(Qt::AlignCenter);
                         QString wtype = JA_forecast[i].toObject().value("type").toString();
                         qDebug() << wtype;
@@ -292,7 +292,7 @@ void MainWindow::getWeather()
                     }
                     //}
                     //}
-                    swn = city + "\n" + sw0 + "\n" + wendu + "\n湿度：" + shidu + "\nPM2.5：" + pm25 + "\n空气质量：" + quality +"\n" + ganmao + "\n更新：" + SUT;
+                    swn = city + "\n" + sw0 + "\n" + wendu + "\n湿度：" + shidu + "\nPM2.5：" + pm25 + "\n空气质量：" + quality +"\n" + ganmao + "\n更新时间：" + SUT;
                     //qDebug() << swn;
                     systray->setToolTip(swn);
                     systray->setIcon(QIcon(icon_path0));
@@ -320,14 +320,25 @@ void MainWindow::trayActivated(QSystemTrayIcon::ActivationReason reason)
 
 void MainWindow::about()
 {
-    QMessageBox MB(QMessageBox::NoIcon, "关于", "中国天气预报 2.6\n一款基于Qt的天气预报程序。\n作者：牛童\nE-mail: 1248449622@qq.com\n天气API：https://www.sojson.com/blog/305.html\n\n");
+    QMessageBox MB(QMessageBox::NoIcon, "关于", "中国天气预报 2.6\n一款基于Qt的天气预报程序。\n作者：牛童\nE-mail: 1248449622@qq.com\n学号：201941412119\n"
+                                              "天气API：https://www.sojson.com/blog/305.html\n\n");
     MB.setIconPixmap(QPixmap(":/icon.png"));
     MB.exec();
 }
 
 void MainWindow::changelog()
 {
-    QString s = "2.6 (2020-04-18)\n天气预报增加到15天。\n滚动布局。\n增加更换城市功能。\n图标加入资源，方便单文件运行。\n城市名转ID，读取本地文件代替网络API，更快更可靠。\n\n2.5 (2018-10-15)\n1.更换失效的天气预报API，优化结构，解决窗口顶置问题。\n\n2.4 (2018-05-30)\n1.增加写log文件，不需要调试也可以查看API的问题了。\n\n2.3 (2018-04-13)\n1.修复：日期数据不含月转换为日期引起的日期错误。\n\n2.2 (2017-01-23)\n1.使用本地图标代替边缘有白色的网络图标，可用于暗色背景了！\n\n2.1 (2016-12-09)\n1.窗体始终居中。\n\n2.0 (2016-11-21)\n1.使用QScript库代替QJsonDocument解析JSON，开发出兼容Qt4的版本。\n2.单击图标弹出实时天气消息，弥补某些系统不支持鼠标悬浮信息的不足。\n3.由于QScriptValueIterator.value().property解析不了某个JSON，使用QScriptValue.property.property代替。\n4.托盘右键增加一个刷新菜单。\n\n1.0 (2016-11-17)\n1.动态修改天气栏托盘图标，鼠标悬浮显示实时天气，点击菜单弹出窗口显示7天天气预报。\n2.每30分钟自动刷新一次。\n3.窗体透明。";
+    QString s = "v.2.6 \n天气预报增加到15天。\n滚动布局。\n增加更换城市功能。\n图标加入资源，方便单文件运行。\n城市名转ID，读取本地文件代替网络API，更快更可靠。\n\n"
+                "v.2.5 \n1.更换失效的天气预报API，优化结构，解决窗口顶置问题。\n\n"
+                "v.2.4 \n1.增加写log文件，不需要调试也可以查看API的问题了。\n\n"
+                "v.2.3 \n1.修复：日期数据不含月转换为日期引起的日期错误。\n\n"
+                "v.2.2 \n1.使用本地图标代替边缘有白色的网络图标，可用于暗色背景了！\n\n"
+                "v.2.1 \n1.窗体始终居中。\n\n"
+                "v.2.0 \n1.使用QScript库代替QJsonDocument解析JSON，开发出兼容Qt4的版本。\n"
+                "2.单击图标弹出实时天气消息，弥补某些系统不支持鼠标悬浮信息的不足。\n"
+                "3.由于QScriptValueIterator.value().property解析不了某个JSON，使用QScriptValue.property.property代替。\n"
+                "4.托盘右键增加一个刷新菜单。\n\n"
+                "v.1.0 \n1.动态修改天气栏托盘图标，鼠标悬浮显示实时天气，点击菜单弹出窗口显示7天天气预报。\n2.每30分钟自动刷新一次。\n3.窗体透明。";
     QDialog *dialog = new QDialog;
     dialog->setWindowTitle("更新历史");
     dialog->setFixedSize(400, 300);
