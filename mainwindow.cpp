@@ -35,7 +35,7 @@ static const QMap<QString, QString> weatherMap {
     {"小雪", "14"},
     {"中雪", "15"},
     {"大雪", "13"},
-    {"霾", "69"},
+    {"霾", "53"},
 };
 
 MainWindow::MainWindow(QWidget *parent)
@@ -43,7 +43,7 @@ MainWindow::MainWindow(QWidget *parent)
     ,settings(QCoreApplication::organizationName(), QCoreApplication::applicationName())
 {
     setStyleSheet("QLabel { color:white; }"
-//                  "QScrollArea { border:none; }"
+                  "QScrollArea { border:none; }"
                   "QScrollBar:horizontal { background:transparent; }");
     setWindowTitle("中国天气预报");
     move((QApplication::desktop()->width() - QApplication::desktop()->width())/2, (QApplication::desktop()->height() - QApplication::desktop()->height())/2);
@@ -71,6 +71,7 @@ MainWindow::MainWindow(QWidget *parent)
     labelUT = new QLabel("更新时间");
     labelUT->setAlignment(Qt::AlignCenter);
     hbox->addWidget(labelUT);
+    //用于修改城市
     searchEdit = new QLineEdit(city);
     searchEdit->setAlignment(Qt::AlignCenter);
     hbox->addWidget(searchEdit);
@@ -83,6 +84,7 @@ MainWindow::MainWindow(QWidget *parent)
     widget1->setFixedSize(1200,180);
     widget1->setAttribute(Qt::WA_TranslucentBackground, true);
     QGridLayout *gridLayout = new QGridLayout;
+    //从1月1日开始显示默认天气
     for(int i=0; i<15; i++){
         labelDate[i] = new QLabel("1月1日\n星期一");
         labelDate[i]->setAlignment(Qt::AlignCenter);
@@ -128,6 +130,7 @@ MainWindow::MainWindow(QWidget *parent)
     traymenu->addAction(action_quit);
     systray->setContextMenu(traymenu);
     systray->show();
+
     connect(systray, SIGNAL(activated(QSystemTrayIcon::ActivationReason)), this, SLOT(trayActivated(QSystemTrayIcon::ActivationReason)));
     connect(action_forecast, SIGNAL(triggered(bool)), this, SLOT(showForecast()));
     connect(action_refresh, SIGNAL(triggered(bool)), this, SLOT(getWeather()));
@@ -143,6 +146,7 @@ MainWindow::MainWindow(QWidget *parent)
 
 void MainWindow::closeEvent(QCloseEvent *event)//此函数在QWidget关闭时执行
 {
+    //将主界面关闭  最小化到任务栏
     hide();
 
     event->ignore();
@@ -150,6 +154,7 @@ void MainWindow::closeEvent(QCloseEvent *event)//此函数在QWidget关闭时执
 
 void MainWindow::getWeather()
 {
+    //规定时间格式
     QDateTime currentDateTime = QDateTime::currentDateTime();
     QString log = currentDateTime.toString("yyyy/MM/dd HH:mm:ss") + "\n";
 
@@ -191,127 +196,118 @@ void MainWindow::getWeather()
     }
 
     //城市名转ID
-    //    /*
-        surl = "http://hao.weidunewtab.com/tianqi/city.php?city=" + city;
-        url.setUrl(surl);
-        reply = manager.get(QNetworkRequest(url));
-        QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-        loop.exec();
-        cityID = reply->readAll();
-        qDebug() << surl;
-        qDebug() << cityID;
-        log += surl + "\n";
-        log += cityID + "\n";
-        if (cityID == "") {
-            labelComment->setText("错误：城市名返回城市ID为空");
-            return;
-        } else if(cityID == "ERROR") {
-            labelComment->setText(city + " ：城市名称错误");
-            cityID = "101181801";
-//            return;
+    surl = "http://hao.weidunewtab.com/tianqi/city.php?city=" + city;
+    url.setUrl(surl);
+    reply = manager.get(QNetworkRequest(url));
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+    cityID = reply->readAll();
+    qDebug() << surl;
+    qDebug() << cityID;
+    log += surl + "\n";
+    log += cityID + "\n";
+    if (cityID == "") {
+        labelComment->setText("错误：城市名返回城市ID为空");
+        return;
+    } else if(cityID == "ERROR") {
+        labelComment->setText(city + " ：城市名称错误");
+        cityID = "101181801";
+        return;
+    } else {
+        bool ok;
+        int dec = cityID.toInt(&ok, 10);
+        Q_UNUSED(dec);
+        if(!ok){
+            labelComment->setText(reply->readAll());
         } else {
-            bool ok;
-            int dec = cityID.toInt(&ok, 10);
-            Q_UNUSED(dec);
-            if(!ok){
-                labelComment->setText(reply->readAll());
-            } else {
-                labelComment->setText("");
+            labelComment->setText("");
+        }
+    }
+
+    //读取本地文件代替网络API，更快更可靠。
+    QFile file(":/cityID.txt");
+    bool ok = file.open(QIODevice::ReadOnly);
+    if (ok) {
+        QTextStream TS(&file);
+        QString s = TS.readAll();
+        file.close();
+        QStringList SL = s.split("\n");
+            for(int i=0; i<SL.length(); i++){
+                QString line = SL.at(i);
+                if (line.contains(city)) {
+                    cityID = line.left(line.indexOf("="));
+                    break;
+                }
             }
         }
 
-        //    */
-            //读取本地文件代替网络API，更快更可靠。
-            QFile file(":/cityID.txt");
-            bool ok = file.open(QIODevice::ReadOnly);
-            if (ok) {
-                QTextStream TS(&file);
-                QString s = TS.readAll();
-                file.close();
-                QStringList SL = s.split("\n");
-                for(int i=0; i<SL.length(); i++){
-                    QString line = SL.at(i);
-                    if (line.contains(city)) {
-                        cityID = line.left(line.indexOf("="));
-                        break;
-                    }
-                }
-            }
+    //获取天气信息
+    surl = "http://t.weather.itboy.net/api/weather/city/"+ cityID;
+    url.setUrl(surl);
+    reply = manager.get(QNetworkRequest(url));
+    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    loop.exec();
+    BA = reply->readAll();
+    qDebug() << surl;
+    log += surl + "\n";
+    log += BA + "\n";
+    JD = QJsonDocument::fromJson(BA, &JPE);
+    if (JPE.error == QJsonParseError::NoError) {
+        //如果正常，没有发生错误 则执行以下操作
+        if (JD.isObject()) {
+            QJsonObject obj = JD.object();
+            city = obj.value("cityInfo").toObject().value("city").toString().replace("市","");
+            labelCity->setText(city);
+            QString SUT = obj.value("cityInfo").toObject().value("updateTime").toString();
+            labelUT->setText("更新时间：\n" + SUT);
+            QJsonObject JO_data = JD.object().value("data").toObject();
+            QString wendu = JO_data.value("wendu").toString() + "°C";
+            labelTemp->setText(wendu);
+            QString shidu = JO_data.value("shidu").toString();
+            labelSD->setText("湿度\n" + shidu);
+            QString pm25 = QString::number(JO_data.value("pm25").toInt());
+            labelPM->setText("PM2.5\n" + pm25);
+            QString quality = JO_data.value("quality").toString();
+            QString ganmao = JO_data.value("ganmao").toString();
+            labelAQI->setText("空气质量：" + quality + "\n" + ganmao);
 
-        //获取天气信息
-        surl = "http://t.weather.itboy.net/api/weather/city/"+ cityID;
-            url.setUrl(surl);
-            reply = manager.get(QNetworkRequest(url));
-            QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-            loop.exec();
-            BA = reply->readAll();
-            qDebug() << surl;
-            //qDebug() << BA;
-            log += surl + "\n";
-            log += BA + "\n";
-            JD = QJsonDocument::fromJson(BA, &JPE);
-            //qDebug() << "QJsonParseError:" << JPE.errorString();
-            if (JPE.error == QJsonParseError::NoError) {
-                if (JD.isObject()) {
-                    QJsonObject obj = JD.object();
-                    city = obj.value("cityInfo").toObject().value("city").toString().replace("市","");
-                    labelCity->setText(city);
-                    QString SUT = obj.value("cityInfo").toObject().value("updateTime").toString();
-                    labelUT->setText("更新时间：\n" + SUT);
-                    //if (obj.contains("data")) {
-                    QJsonObject JO_data = JD.object().value("data").toObject();
-                    QString wendu = JO_data.value("wendu").toString() + "°C";
-                    labelTemp->setText(wendu);
-                    QString shidu = JO_data.value("shidu").toString();
-                    labelSD->setText("湿度\n" + shidu);
-//                    labelWind->setText(JO_data.value("wendu").toString() + "\n" + JO_data.value("WS").toString());
-                    QString pm25 = QString::number(JO_data.value("pm25").toInt());
-                    labelPM->setText("PM2.5\n" + pm25);
-                    QString quality = JO_data.value("quality").toString();
-                    QString ganmao = JO_data.value("ganmao").toString();
-                    labelAQI->setText("空气质量：" + quality + "\n" + ganmao);
-
-                    QJsonArray JA_forecast = JO_data.value("forecast").toArray();
-                    for (int i=0; i<15; i++) {
-                        labelDate[i]->setText(JA_forecast[i].toObject().value("date").toString() + "日");
-                        labelDate[i]->setAlignment(Qt::AlignCenter);
-                        QString wtype = JA_forecast[i].toObject().value("type").toString();
-                        qDebug() << wtype;
-                        QString icon_path = ":/images/" + weatherMap[wtype] + ".png";
-                        if(i == 0){
-                            sw0 = JA_forecast[i].toObject().value("type").toString();
-                            icon_path0 = icon_path;
-                        }
-                        //qDebug() << icon_path;
-                        QPixmap pixmap(icon_path);
-                        labelWImg[i]->setToolTip(wtype);
-                        labelWImg[i]->setPixmap(pixmap.scaled(50,50));
-                        labelWImg[i]->setAlignment(Qt::AlignCenter);
-                        labelWeather[i]->setText(wtype + "\n" + JA_forecast[i].toObject().value("high").toString() + "\n" + JA_forecast[i].toObject().value("low").toString() + "\n" + JA_forecast[i].toObject().value("fx").toString() + JA_forecast[i].toObject().value("fl").toString());
-                        labelWeather[i]->setAlignment(Qt::AlignCenter);
-                    }
-                    //}
-                    //}
-                    swn = city + "\n" + sw0 + "\n" + wendu + "\n湿度：" + shidu + "\nPM2.5：" + pm25 + "\n空气质量：" + quality +"\n" + ganmao + "\n更新时间：" + SUT;
-                    //qDebug() << swn;
-                    systray->setToolTip(swn);
-                    systray->setIcon(QIcon(icon_path0));
+            QJsonArray JA_forecast = JO_data.value("forecast").toArray();
+            for (int i=0; i<15; i++) {
+                labelDate[i]->setText(JA_forecast[i].toObject().value("date").toString() + "日");
+                labelDate[i]->setAlignment(Qt::AlignCenter);
+                QString wtype = JA_forecast[i].toObject().value("type").toString();
+                qDebug() << wtype;
+                QString icon_path = ":/images/" + weatherMap[wtype] + ".png";
+                if(i == 0){
+                    sw0 = JA_forecast[i].toObject().value("type").toString();
+                    icon_path0 = icon_path;
                 }
+                QPixmap pixmap(icon_path);
+                labelWImg[i]->setToolTip(wtype);
+                labelWImg[i]->setPixmap(pixmap.scaled(50,50));
+                labelWImg[i]->setAlignment(Qt::AlignCenter);
+                labelWeather[i]->setText(wtype + "\n" + JA_forecast[i].toObject().value("high").toString() + "\n" + JA_forecast[i].toObject().value("low").toString() + "\n" + JA_forecast[i].toObject().value("fx").toString() + JA_forecast[i].toObject().value("fl").toString());
+                labelWeather[i]->setAlignment(Qt::AlignCenter);
             }
+            swn = city + "\n" + sw0 + "\n" + wendu + "\n湿度：" + shidu + "\nPM2.5：" + pm25 + "\n空气质量：" + quality +"\n" + ganmao + "\n更新时间：" + SUT;
+            systray->setToolTip(swn);
+            systray->setIcon(QIcon(icon_path0));
+        }
+    }
 }
 
 void MainWindow::trayActivated(QSystemTrayIcon::ActivationReason reason)
 {
     qDebug() << reason;
     switch(reason) {
-    case QSystemTrayIcon::Trigger:
-        //systray->showMessage("实时天气", swn, QSystemTrayIcon::MessageIcon::Information, 9000);//图标被修改
-        break;
-    case QSystemTrayIcon::DoubleClick://无效
-        //showForecast();
-        break;
-    case QSystemTrayIcon::MiddleClick:
+//    case QSystemTrayIcon::DoubleClick:    //双击与单击会冲突，暂时取消该功能
+//        showForecast();
+//        break;
+    case QSystemTrayIcon::MiddleClick:    //鼠标中键
         showForecast();
+        break;
+    case QSystemTrayIcon::Trigger:        //单击
+        systray->showMessage("实时天气", swn, QSystemTrayIcon::MessageIcon::Information, 9000);
         break;
     default:
         break;
@@ -363,6 +359,7 @@ void MainWindow::changelog()
 
 void MainWindow::showForecast()
 {
+    //显示主界面
     move((QApplication::desktop()->width() - width())/2, (QApplication::desktop()->height() - height())/2);
     show();
     raise();
@@ -371,6 +368,9 @@ void MainWindow::showForecast()
 
 void MainWindow::changeCity()
 {
+    //获取到文本框中的城市
     settings.setValue("City", searchEdit->text());
+    //调用函数 改变城市
     getWeather();
+    searchEdit->setText("");
 }
