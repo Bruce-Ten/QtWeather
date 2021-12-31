@@ -42,13 +42,10 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     ,settings(QCoreApplication::organizationName(), QCoreApplication::applicationName())
 {
-//    setStyleSheet("QLabel { color:white; }"
-//                  "QScrollArea { border:none; }"
-//                  "QScrollBar:horizontal { background:transparent; }");
+    setStyleSheet("QLabel { color:green; }");
     setWindowTitle("中国天气预报");
     move((QApplication::desktop()->width() - QApplication::desktop()->width())/2, (QApplication::desktop()->height() - QApplication::desktop()->height())/2);
     QWidget *widget = new QWidget;
-//    setAttribute(Qt::WA_TranslucentBackground, true);
 
     QVBoxLayout *vbox = new QVBoxLayout;
     QHBoxLayout *hbox = new QHBoxLayout;
