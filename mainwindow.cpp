@@ -44,7 +44,8 @@ MainWindow::MainWindow(QWidget *parent)
 {
     setStyleSheet("QLabel { color:green; }");
     setWindowTitle("中国天气预报");
-    move((QApplication::desktop()->width() - QApplication::desktop()->width())/2, (QApplication::desktop()->height() - QApplication::desktop()->height())/2);
+    move((QApplication::desktop()->width() - QApplication::desktop()->width())/2,
+         (QApplication::desktop()->height() - QApplication::desktop()->height())/2);
     QWidget *widget = new QWidget;
 
     QVBoxLayout *vbox = new QVBoxLayout;
@@ -190,7 +191,6 @@ void MainWindow::getWeather()
             }
         }
     }
-
     //城市名转ID
     surl = "http://hao.weidunewtab.com/tianqi/city.php?city=" + city;
     url.setUrl(surl);
@@ -207,8 +207,7 @@ void MainWindow::getWeather()
         return;
     } else if(cityID == "ERROR") {
         labelComment->setText(city + " ：城市名称错误");
-        cityID = "101181801";
-        return;
+        cityID = "101281601";
     } else {
         bool ok;
         int dec = cityID.toInt(&ok, 10);
@@ -219,23 +218,6 @@ void MainWindow::getWeather()
             labelComment->setText("");
         }
     }
-
-    //读取本地文件代替网络API，更快更可靠。
-    QFile file(":/cityID.txt");
-    bool ok = file.open(QIODevice::ReadOnly);
-    if (ok) {
-        QTextStream TS(&file);
-        QString s = TS.readAll();
-        file.close();
-        QStringList SL = s.split("\n");
-            for(int i=0; i<SL.length(); i++){
-                QString line = SL.at(i);
-                if (line.contains(city)) {
-                    cityID = line.left(line.indexOf("="));
-                    break;
-                }
-            }
-        }
 
     //获取天气信息
     surl = "http://t.weather.itboy.net/api/weather/city/"+ cityID;
@@ -282,10 +264,13 @@ void MainWindow::getWeather()
                 labelWImg[i]->setToolTip(wtype);
                 labelWImg[i]->setPixmap(pixmap.scaled(50,50));
                 labelWImg[i]->setAlignment(Qt::AlignCenter);
-                labelWeather[i]->setText(wtype + "\n" + JA_forecast[i].toObject().value("high").toString() + "\n" + JA_forecast[i].toObject().value("low").toString() + "\n" + JA_forecast[i].toObject().value("fx").toString() + JA_forecast[i].toObject().value("fl").toString());
+                labelWeather[i]->setText(wtype + "\n" + JA_forecast[i].toObject().value("high").toString() +
+                                         "\n" + JA_forecast[i].toObject().value("low").toString() + "\n"
+                                         + JA_forecast[i].toObject().value("fx").toString() + JA_forecast[i].toObject().value("fl").toString());
                 labelWeather[i]->setAlignment(Qt::AlignCenter);
             }
-            swn = city + "\n" + sw0 + "\n" + wendu + "\n湿度：" + shidu + "\nPM2.5：" + pm25 + "\n空气质量：" + quality +"\n" + ganmao + "\n更新时间：" + SUT;
+            swn = city + "\n" + sw0 + "\n" + wendu + "\n湿度：" + shidu + "\nPM2.5：" + pm25 + "\n空气质量：" + quality +"\n" + ganmao
+                    + "\n更新时间：" + SUT;
             systray->setToolTip(swn);
             systray->setIcon(QIcon(icon_path0));
         }
@@ -296,9 +281,6 @@ void MainWindow::trayActivated(QSystemTrayIcon::ActivationReason reason)
 {
     qDebug() << reason;
     switch(reason) {
-//    case QSystemTrayIcon::DoubleClick:    //双击与单击会冲突，暂时取消该功能
-//        showForecast();
-//        break;
     case QSystemTrayIcon::MiddleClick:    //鼠标中键
         showForecast();
         break;
