@@ -42,13 +42,13 @@ MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
     ,settings(QCoreApplication::organizationName(), QCoreApplication::applicationName())
 {
-    setStyleSheet("QLabel { color:white; }"
-                  "QScrollArea { border:none; }"
-                  "QScrollBar:horizontal { background:transparent; }");
+//    setStyleSheet("QLabel { color:white; }"
+//                  "QScrollArea { border:none; }"
+//                  "QScrollBar:horizontal { background:transparent; }");
     setWindowTitle("中国天气预报");
     move((QApplication::desktop()->width() - QApplication::desktop()->width())/2, (QApplication::desktop()->height() - QApplication::desktop()->height())/2);
     QWidget *widget = new QWidget;
-    setAttribute(Qt::WA_TranslucentBackground, true);
+//    setAttribute(Qt::WA_TranslucentBackground, true);
 
     QVBoxLayout *vbox = new QVBoxLayout;
     QHBoxLayout *hbox = new QHBoxLayout;
@@ -82,7 +82,6 @@ MainWindow::MainWindow(QWidget *parent)
     searchButton->setShortcut(Qt::Key_Enter);
     QWidget *widget1 = new QWidget;
     widget1->setFixedSize(1200,180);
-    widget1->setAttribute(Qt::WA_TranslucentBackground, true);
     QGridLayout *gridLayout = new QGridLayout;
     //从1月1日开始显示默认天气
     for(int i=0; i<15; i++){
